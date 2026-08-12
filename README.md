@@ -5,8 +5,8 @@
 CDN — без сборки, без React, без библиотек компонентов. Переносится
 копированием, а не установкой.
 
-Репозиторий приватный и нужен для одного: чтобы в новом проекте не выдумывать
-оформление заново, а взять готовое.
+Нужен для одного: чтобы в новом проекте не выдумывать оформление заново, а взять
+готовое — по ссылке, без копирования из проекта в проект.
 
 ## С чего начать
 
@@ -38,10 +38,24 @@ git clone https://github.com/christophermaasi/design-system.git
 отдельными HTML-файлами и вставлять через `<?!= include('Dashboard') ?>` —
 именно так собран исходный проект.
 
-**Если верстает ИИ-агент.** Репозиторий приватный, поэтому по ссылке он его не
-прочитает — надо дать файлы локально: склонировать рядом с проектом, а
-содержимое `AGENTS.md` положить в `CLAUDE.md` нового проекта. Дальше достаточно
-писать «сделай по нашей дизайн-системе».
+**Если верстает ИИ-агент.** Репозиторий публичный, поэтому достаточно дать
+ссылку — файлы читаются напрямую, без клонирования и без доступа:
+
+```
+https://raw.githubusercontent.com/christophermaasi/design-system/main/AGENTS.md
+https://raw.githubusercontent.com/christophermaasi/design-system/main/DESIGN-SYSTEM.md
+https://raw.githubusercontent.com/christophermaasi/design-system/main/starter/tokens.css
+https://raw.githubusercontent.com/christophermaasi/design-system/main/starter/index.html
+```
+
+Формулировка для нового проекта, работает с любым агентом:
+
+> Дизайн берём отсюда: https://github.com/christophermaasi/design-system —
+> прочитай `AGENTS.md` и `DESIGN-SYSTEM.md` перед вёрсткой и следуй им.
+
+Если проект долгий, содержимое `AGENTS.md` лучше сразу положить в `CLAUDE.md`
+нового проекта: тогда правила подхватываются каждую сессию, а не по напоминанию.
+Дальше достаточно писать «сделай по нашей дизайн-системе».
 
 ## Суть в восьми правилах
 
@@ -68,5 +82,6 @@ git clone https://github.com/christophermaasi/design-system.git
 здесь — переносим в проекты руками; автоматической связи нет и не планируется,
 она бы стоила дороже, чем экономит.
 
-Родной проект, откуда всё выросло:
-[christophermaasi/unpack-competitors](https://github.com/christophermaasi/unpack-competitors).
+Родной проект, откуда всё выросло, —
+[christophermaasi/unpack-competitors](https://github.com/christophermaasi/unpack-competitors);
+он приватный, ссылка здесь для истории, а не для чтения.
