@@ -1,0 +1,256 @@
+/* ============================================================================
+ *  Токены и базовые классы дизайн-системы.
+ *
+ *  Единственный источник правды по цветам, скруглениям и «кирпичикам», которых
+ *  нет в Tailwind. Подключается либо <link rel="stylesheet" href="tokens.css">,
+ *  либо содержимое кладётся в <style> — в Google Apps Script только так.
+ *
+ *  Цвета хранятся тройками HSL без обёртки (240 10% 3.9%), а не готовым цветом.
+ *  Это позволяет писать hsl(var(--primary) / .25) — тот же цвет с прозрачностью,
+ *  без второй переменной. На этом приёме держатся все полупрозрачные подложки.
+ * ========================================================================== */
+
+:root {
+  --background: 0 0% 100%;      --foreground: 240 10% 3.9%;
+  --card: 0 0% 100%;            --card-foreground: 240 10% 3.9%;
+  --muted: 240 4.8% 95.9%;      --muted-foreground: 240 3.8% 46.1%;
+  --accent: 240 4.8% 95.9%;     --accent-foreground: 240 5.9% 10%;
+  --primary: 240 5.9% 10%;      --primary-foreground: 0 0% 98%;
+  --border: 240 5.9% 90%;
+
+  /* сверх стандартного shadcn */
+  --sidebar: 240 4.8% 97.5%;    --sidebar-foreground: 240 5.3% 26.1%;
+  --head: 240 6% 90%;           /* фон шапки таблицы — заметно темнее карточки */
+
+  /* линии таблиц: обычный --border для плотной сетки слишком контрастный */
+  --db-line: 240 6% 89%;        --db-line-strong: 240 6% 78%;
+
+  --radius: 0.5rem;
+}
+
+.dark {
+  --background: 240 10% 3.9%;   --foreground: 0 0% 98%;
+  --card: 240 10% 3.9%;         --card-foreground: 0 0% 98%;
+  --muted: 240 3.7% 15.9%;      --muted-foreground: 240 5% 64.9%;
+  --accent: 240 3.7% 15.9%;     --accent-foreground: 0 0% 98%;
+  --primary: 0 0% 98%;          --primary-foreground: 240 5.9% 10%;
+  --border: 240 3.7% 15.9%;
+
+  --sidebar: 240 5.9% 7%;       --sidebar-foreground: 240 5% 84.9%;
+  --head: 240 5% 14.5%;
+
+  --db-line: 240 4% 23%;        --db-line-strong: 240 4% 33%;
+}
+
+body {
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------------------------------------------------------------- прокрутка */
+
+.scroll-area::-webkit-scrollbar { height: 10px; width: 10px; }
+.scroll-area::-webkit-scrollbar-thumb { background: hsl(var(--border)); border-radius: 6px; }
+.scroll-area::-webkit-scrollbar-track { background: transparent; }
+
+/* --------------------------------------------------------------- навигация */
+
+.nav-item.active { background: hsl(var(--accent)); color: hsl(var(--foreground)); font-weight: 500; }
+
+/* ------------------------------------------------------------------ ввод
+ * Единственный класс поля на весь проект. Им оформлены input, select,
+ * input[type=date|search] и кнопка, открывающая выпадающий список: одинаковый
+ * вид у всего, что «принимает ввод», — половина аккуратности интерфейса.
+ */
+
+.field {
+  border-radius: calc(var(--radius) - 2px);
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--background));
+  padding: .35rem .5rem;
+  font-size: .8125rem;
+  color: inherit;
+}
+.field:focus { outline: none; box-shadow: 0 0 0 2px hsl(var(--primary) / .25); }
+
+/* ------------------------------------------------------------ переключатели
+ * .pill выключается прозрачностью: её цвет — это цвет линии на графике, рамка
+ * бы с ним спорила. .chip выключается рамкой и фоном.
+ * Выключенное состояние никогда не прячется — только приглушается.
+ */
+
+.pill {
+  display: inline-flex; align-items: center; gap: .4rem;
+  cursor: pointer; user-select: none;
+  font-size: .75rem; white-space: nowrap; padding: .15rem .1rem;
+  transition: opacity .15s;
+}
+.pill.off { opacity: .38; }
+.pill.off .pill-dot { background: hsl(var(--muted-foreground)) !important; }
+.pill-dot { width: 9px; height: 9px; border-radius: 999px; flex: none; }
+
+.chip {
+  display: inline-flex; align-items: center; gap: .4rem;
+  cursor: pointer; user-select: none;
+  font-size: .75rem; white-space: nowrap;
+  border: 1px solid hsl(var(--border)); border-radius: 999px;
+  padding: .2rem .6rem .2rem .25rem;
+  transition: all .15s;
+}
+.chip.off { opacity: .45; }
+.chip.on  { background: hsl(var(--accent)); border-color: hsl(var(--primary) / .35); }
+.chip img { width: 20px; height: 20px; border-radius: 999px; object-fit: cover; flex: none; }
+
+/* сегменты: активная кнопка — светлая таблетка с еле заметной тенью */
+.seg {
+  display: inline-flex; gap: 2px; padding: 2px; border-radius: 999px;
+  background: hsl(var(--muted-foreground) / .12);
+}
+.seg button {
+  font-size: .6875rem; line-height: 1.35; padding: .15rem .6rem;
+  border-radius: 999px; white-space: nowrap; opacity: .7; transition: all .15s;
+}
+.seg button.on { background: hsl(var(--card)); opacity: 1; font-weight: 500;
+                 box-shadow: 0 1px 2px rgba(0,0,0,.14); }
+.seg button:not(.on):hover { opacity: 1; }
+
+/* --------------------------------------------------------------- мелочи
+ * Список значений в узкой ячейке — плашками, а не строкой через «;»: по ним
+ * видно хотя бы количество и начало каждого. Обрезка ровно в две строки,
+ * полный текст — в title.
+ */
+
+.db-tags { display: flex; flex-wrap: wrap; gap: .2rem; }
+.db-tag {
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  max-width: 100%; overflow: hidden;
+  font-size: .6875rem; line-height: 1.3;
+  padding: .1rem .375rem; border-radius: 5px;
+  background: hsl(var(--muted-foreground) / .1);
+}
+.db-count {
+  font-size: .6875rem; line-height: 1; padding: .2rem .4rem;
+  border-radius: 999px; background: hsl(var(--muted-foreground) / .12); font-weight: 500;
+}
+/* да/нет — точкой, чтобы столбец читался сканированием, а не чтением */
+.db-flag { display: inline-flex; align-items: center; gap: .35rem; font-size: .75rem; }
+.db-flag i { width: 7px; height: 7px; border-radius: 999px; flex: none; background: currentColor; }
+.db-dot { width: 7px; height: 7px; border-radius: 999px; background: currentColor; flex: none; }
+
+/* ================================================================== ТАБЛИЦЫ
+ * border-collapse: separate — принципиально, а не по вкусу. При collapse
+ * граница принадлежит таблице, а не ячейке: залипающая колонка едет вбок,
+ * граница остаётся на месте, и в шов видно уезжающее содержимое. При separate
+ * каждая ячейка везёт свои границы с собой. Границы рисуют сами ячейки,
+ * поэтому линии не удваиваются.
+ *
+ * Этажи z-index, одинаковые во всех проектах:
+ *   20 — залипающие колонки        60 — подсказка
+ *   30 — залипающая шапка          70 — выпадающая панель
+ *   40 — их пересечение            80 — полноэкранный просмотр
+ */
+
+.tbl { border-collapse: separate; border-spacing: 0; table-layout: fixed; }
+.tbl td, .tbl th { border-bottom: 1px solid hsl(var(--db-line)); }
+.tbl tbody .db-cell { padding: .45rem .625rem; }
+.tbl thead .db-cell { padding: .5rem  .625rem; }
+
+.sticky-head { position: sticky; top: 0; z-index: 30; }
+/* конкретные left считаются в JS от констант ширины — см. starter/index.html */
+.stick { position: sticky; z-index: 20; }
+.sticky-head .stick { z-index: 40; }
+
+/* фон шапки. У всех залипающих ячеек фон обязан быть непрозрачным, иначе
+   сквозь них видно уезжающие ячейки */
+.head-cell { background: hsl(var(--head)); }
+
+/* шапка отрывается от тела мягкой тенью, а не жирной линией */
+.sticky-head th { border-bottom-color: hsl(var(--db-line-strong)); }
+.sticky-head th:not(.db-lead) { box-shadow: 0 4px 10px -8px rgba(0,0,0,.45); }
+
+/* правый край замороженной зоны и граница между объектами — единственные
+   вертикали. Линию у каждой колонки не рисуем: расчертило бы экран в клетку */
+.stick-edge { border-right: 1px solid hsl(var(--db-line-strong)); }
+.db-sep { border-left: 1px solid hsl(var(--db-line-strong)); }
+
+/* зебра и итог — градиентом поверх фона, а не background-color: залипающие
+   колонки должны остаться непрозрачными */
+.db-odd   td:not(.db-lead) { background-image: linear-gradient(hsl(var(--muted-foreground) / .035),
+                                                              hsl(var(--muted-foreground) / .035)); }
+.db-total td:not(.db-lead) { background-image: linear-gradient(hsl(var(--muted-foreground) / .1),
+                                                              hsl(var(--muted-foreground) / .1)); }
+
+/* опорная колонка (точка отсчёта). Края — тенью внутрь, а не рамкой: рамка
+   добавила бы ширину и разошлась бы с сеткой соседних ячеек */
+.db-lead   { background-color: hsl(var(--card));
+             background-image: linear-gradient(rgba(99,102,241,.07), rgba(99,102,241,.07)); }
+.dark .db-lead { background-image: linear-gradient(rgba(129,140,248,.12), rgba(129,140,248,.12)); }
+.sticky-head .db-lead { background-color: hsl(var(--head)); }
+.db-lead-l { box-shadow: inset  2px 0 0 rgba(99,102,241,.55); }
+.db-lead-r { box-shadow: inset -2px 0 0 rgba(99,102,241,.55); }
+.db-lead-l.db-lead-r { box-shadow: inset 2px 0 0 rgba(99,102,241,.55),
+                                   inset -2px 0 0 rgba(99,102,241,.55); }
+.db-lead-tag { background: rgba(99,102,241,.15); color: #4f46e5; font-size: .625rem;
+               border-radius: 999px; padding: .05rem .4rem; letter-spacing: .04em; }
+.dark .db-lead-tag { color: #a5b4fc; }
+
+/* строка-разделитель во всю ширину прилипнуть не может — она и так начинается
+   у левого края. Прилипает её содержимое: обёртка shrink-to-fit */
+.row-pin { position: sticky; left: 0; padding-right: 12px; }
+
+/* граница недели — понедельник */
+.week-start { border-left: 1px solid hsl(var(--muted-foreground) / .45) !important; }
+
+/* ------------------------------------------------- акценты блоков (7 пар) */
+
+.acc-sky     { background: #f3f8ff; color: #0369a1; }
+.acc-amber   { background: #fffaf2; color: #b45309; }
+.acc-emerald { background: #f2fdf8; color: #047857; }
+.acc-violet  { background: #f8f6ff; color: #6d28d9; }
+.acc-indigo  { background: #f4f5ff; color: #4338ca; }
+.acc-rose    { background: #fff5f7; color: #be123c; }
+.acc-teal    { background: #f2fdfb; color: #0f766e; }
+.dark .acc-sky     { background: #0b1724; color: #7dd3fc; }
+.dark .acc-amber   { background: #21160a; color: #fcd34d; }
+.dark .acc-emerald { background: #081b15; color: #6ee7b7; }
+.dark .acc-violet  { background: #16102a; color: #c4b5fd; }
+.dark .acc-indigo  { background: #10132b; color: #a5b4fc; }
+.dark .acc-rose    { background: #250d14; color: #fda4af; }
+.dark .acc-teal    { background: #081b1a; color: #5eead4; }
+
+.bar-sky     { box-shadow: inset 3px 0 0 #0ea5e9; }
+.bar-amber   { box-shadow: inset 3px 0 0 #f59e0b; }
+.bar-emerald { box-shadow: inset 3px 0 0 #10b981; }
+.bar-violet  { box-shadow: inset 3px 0 0 #8b5cf6; }
+.bar-indigo  { box-shadow: inset 3px 0 0 #6366f1; }
+.bar-rose    { box-shadow: inset 3px 0 0 #f43f5e; }
+.bar-teal    { box-shadow: inset 3px 0 0 #14b8a6; }
+
+/* --------------------------------------------- всплывающее поверх страницы
+ * Панель живёт в <body> и позиционируется fixed, а не внутри кнопки: кнопка
+ * часто стоит в контейнере с overflow: auto, и всплывашка внутри была бы
+ * обрезана. Позиция считается от getBoundingClientRect() кнопки.
+ */
+
+.menu {
+  position: fixed; z-index: 70;
+  background: hsl(var(--card)); border: 1px solid hsl(var(--border));
+  border-radius: calc(var(--radius) - 2px);
+  box-shadow: 0 12px 32px rgba(0,0,0,.28); overflow: hidden;
+}
+.menu label:hover { background: hsl(var(--accent)); }
+
+.tip {
+  position: absolute; z-index: 60; pointer-events: none; display: none;
+  background: hsl(var(--card)); border: 1px solid hsl(var(--border));
+  border-radius: calc(var(--radius) - 2px);
+  padding: .5rem .6rem; font-size: .75rem;
+  box-shadow: 0 8px 24px rgba(0,0,0,.28); min-width: 150px;
+}
+
+.lightbox {
+  position: fixed; inset: 0; z-index: 80; display: none;
+  background: rgba(0,0,0,.82); align-items: center; justify-content: center; padding: 2rem;
+}
+.lightbox.on { display: flex; }
+.lightbox img { max-width: 100%; max-height: 100%; border-radius: 8px; }

@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<!--
+  Стартовый шаблон дизайн-системы.
+
+  Открывается двойным кликом в браузере и сразу показывает весь набор:
+  каркас с сайдбаром, витрину компонентов и широкую таблицу с залипающими
+  колонками. Дальше из него выкидывается демо-содержимое и вставляется своё.
+
+  Данные тут выдуманные и нужны только чтобы компоненты было видно. Ничего,
+  кроме оформления, в этом файле нет.
+
+  Для Google Apps Script: содержимое tokens.css кладётся в <style> прямо сюда —
+  внешние файлы там не подключаются.
+-->
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Дизайн-система — стартовый шаблон</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            border: 'hsl(var(--border))',
+            background: 'hsl(var(--background))',
+            foreground: 'hsl(var(--foreground))',
+            card:    { DEFAULT: 'hsl(var(--card))',    foreground: 'hsl(var(--card-foreground))' },
+            muted:   { DEFAULT: 'hsl(var(--muted))',   foreground: 'hsl(var(--muted-foreground))' },
+            accent:  { DEFAULT: 'hsl(var(--accent))',  foreground: 'hsl(var(--accent-foreground))' },
+            primary: { DEFAULT: 'hsl(var(--primary))', foreground: 'hsl(var(--primary-foreground))' },
+            sidebar: { DEFAULT: 'hsl(var(--sidebar))', foreground: 'hsl(var(--sidebar-foreground))' }
+          },
+          borderRadius: { lg: 'var(--radius)', md: 'calc(var(--radius) - 2px)', sm: 'calc(var(--radius) - 4px)' }
+        }
+      }
+    };
+  </script>
+
+  <link rel="stylesheet" href="tokens.css">
+
+  <style>
+    /* Смещения залипающих колонок таблицы. Числа те же, что в JS-константах
+       ниже: менять их надо в двух местах разом. */
+    .t-c1 { position: sticky; left: 0;     z-index: 20; }
+    .t-c2 { position: sticky; left: 210px; z-index: 20; }
+    .t-c3 { position: sticky; left: 298px; z-index: 20; }
+    .t-c4 { position: sticky; left: 386px; z-index: 20; }
+    .t-c1, .t-c2, .t-c3, .t-c4 { border-right: 1px solid hsl(var(--db-line)); }
+    .t-c4 { border-right-color: hsl(var(--db-line-strong)); }
+    .sticky-head .t-c1, .sticky-head .t-c2,
+    .sticky-head .t-c3, .sticky-head .t-c4 { z-index: 40; }
+  </style>
+</head>
+
+<body class="bg-background text-foreground">
+<div class="flex h-screen overflow-hidden">
+
+  <!-- ============================ САЙДБАР ============================ -->
+  <aside id="sidebar"
+    class="fixed inset-y-0 left-0 z-50 w-[260px] shrink-0 border-r border-border bg-sidebar
+           flex flex-col -translate-x-full lg:translate-x-0 lg:static transition-transform duration-200">
+
+    <div class="h-16 flex items-center gap-2.5 px-5 border-b border-border">
+      <div class="h-8 w-8 rounded-md bg-primary text-primary-foreground grid place-items-center
+                  text-sm font-bold shrink-0">Д</div>
+      <div class="min-w-0">
+        <div class="text-sm font-semibold truncate">Дизайн-система</div>
+        <div class="text-xs text-muted-foreground truncate">стартовый шаблон</div>
+      </div>
+    </div>
+
+    <nav id="nav" class="flex-1 overflow-y-auto p-3 space-y-1"></nav>
+
+    <div class="p-3 border-t border-border space-y-1">
+      <a href="#" class="nav-item w-full flex items-center gap-3 rounded-md px-3 py-2 text-sm
+                         text-sidebar-foreground hover:bg-accent hover:text-foreground transition-colors">
+        <svg class="h-4 w-4 shrink-0 text-sky-500" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6"/><path d="M10 14 21 3"/></svg>
+        <span class="min-w-0">
+          <span class="block truncate">Внешняя ссылка</span>
+          <span class="block text-xs text-muted-foreground truncate">вторая строка — пояснение</span>
+        </span>
+      </a>
+      <div id="navBottom" class="space-y-1"></div>
+      <button id="theme"
+        class="nav-item w-full flex items-center gap-3 rounded-md px-3 py-2 text-sm
+               text-sidebar-foreground hover:bg-accent hover:text-foreground transition-colors">
+        <svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/>
+          <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M6.3 17.7l-1.4 1.4M19.1 4.9l-1.4 1.4"/></svg>
+        <span>Тема</span>
+      </button>
+    </div>
+  </aside>
+
+  <div id="overlay" class="fixed inset-0 z-40 bg-black/50 hidden lg:hidden"></div>
+
+  <!-- ============================ КОНТЕНТ ============================ -->
+  <div class="flex-1 flex flex-col min-w-0">
+
+    <header class="h-14 shrink-0 border-b border-border flex items-center gap-3 px-5">
+      <button id="burger" class="lg:hidden -ml-1 p-2 rounded-md hover:bg-accent">
+        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+      </button>
+      <div class="min-w-0 flex-1">
+        <h1 id="pageTitle" class="text-base font-semibold tracking-tight truncate">—</h1>
+        <p id="pageSubtitle" class="text-xs text-muted-foreground truncate">—</p>
+      </div>
+      <button class="inline-flex items-center gap-2 rounded-md border border-border bg-background px-3 py-1.5
+                     text-sm font-medium hover:bg-accent transition-colors shrink-0">
+        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 12a9 9 0 0 1 9-9 9 9 0 0 1 6.7 3L21 8M21 3v5h-5M21 12a9 9 0 0 1-9 9 9 9 0 0 1-6.7-3L3 16M3 21v-5h5"/></svg>
+        Обновить
+      </button>
+      <button class="inline-flex items-center gap-2 rounded-md bg-primary text-primary-foreground px-3 py-1.5
+                     text-sm font-medium hover:opacity-90 transition-opacity shrink-0">
+        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/></svg>
+        Действие
+      </button>
+    </header>
+
+    <main class="flex-1 overflow-auto scroll-area">
+
+      <!-- ------------------------- КОМПОНЕНТЫ ------------------------- -->
+      <section data-screen="components" class="hidden p-4">
+        <div class="max-w-4xl space-y-5">
+
+          <!-- обычная карточка -->
+          <div class="rounded-lg border border-border bg-card">
+            <div class="px-5 py-4 border-b border-border">
+              <h2 class="font-semibold">Карточка — основа всего</h2>
+              <p class="text-sm text-muted-foreground mt-0.5">Заголовок всегда с подзаголовком: что это и что это значит</p>
+            </div>
+            <div class="p-5 space-y-4 text-sm leading-relaxed">
+              <p>Рамка <code class="text-xs">border-border</code>, скругление <code class="text-xs">rounded-lg</code>,
+                 шапка отделена <code class="text-xs">border-b</code>, поля <code class="text-xs">px-5 py-4</code>
+                 у шапки и <code class="text-xs">p-5</code> у тела. Карточки в колонке разделяются
+                 <code class="text-xs">space-y-5</code>.</p>
+              <div class="rounded-md border border-border bg-background p-4">
+                <div class="font-medium mb-1.5">Вложенный блок-пояснение</div>
+                <div class="text-muted-foreground">Внутри карточки — на фоне <code class="text-xs">background</code>,
+                  а не <code class="text-xs">muted</code>: так он читается как «вставка», а не как ещё одна карточка.</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- акцентная карточка -->
+          <div class="rounded-lg border border-sky-500/50 dark:border-sky-400/40 bg-card shadow-sm overflow-hidden">
+            <div class="px-5 py-4 border-b border-sky-500/40 dark:border-sky-400/30 bg-sky-50 dark:bg-sky-950/40">
+              <h2 class="font-semibold">Акцентная карточка</h2>
+              <p class="text-sm text-muted-foreground mt-0.5">Главное действие экрана — один раз на экран</p>
+            </div>
+            <div class="p-5 space-y-4">
+              <div class="grid gap-4 sm:grid-cols-2">
+                <div class="sm:col-span-2">
+                  <label class="text-sm font-medium mb-1.5 block">Название</label>
+                  <input type="text" class="field w-full" placeholder="ИП Иванов">
+                  <p class="text-xs text-muted-foreground mt-1.5">Подсказка под полем — там, где возникает вопрос</p>
+                </div>
+                <div>
+                  <label class="text-sm font-medium mb-1.5 block">Ключ <span class="text-rose-500">*</span></label>
+                  <input type="password" class="field w-full font-mono" placeholder="eyJhbGciOiJS…">
+                </div>
+                <div>
+                  <label class="text-sm font-medium mb-1.5 block">Период</label>
+                  <div class="flex items-center gap-1.5">
+                    <input type="date" class="field flex-1 min-w-0" value="2026-07-01">
+                    <span class="text-muted-foreground text-xs">—</span>
+                    <input type="date" class="field flex-1 min-w-0" value="2026-07-31">
+                  </div>
+                </div>
+              </div>
+              <div class="flex flex-wrap items-center gap-3">
+                <button class="rounded-md bg-primary text-primary-foreground px-4 py-2 text-sm font-medium
+                               hover:opacity-90 transition-opacity">Сохранить</button>
+                <button class="rounded-md border border-border bg-background px-3 py-1.5 text-sm font-medium
+                               hover:bg-accent transition-colors">Отмена</button>
+                <button class="text-sm text-sky-600 dark:text-sky-400 hover:underline">Сбросить всё</button>
+                <span class="text-sm text-muted-foreground">Статус действия — рядом с кнопкой</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- переключатели -->
+          <div class="rounded-lg border border-border bg-card">
+            <div class="px-5 py-4 border-b border-border">
+              <h2 class="font-semibold">Переключатели</h2>
+              <p class="text-sm text-muted-foreground mt-0.5">Выключенное приглушается, но не прячется</p>
+            </div>
+            <div class="p-5 space-y-5">
+              <div>
+                <div class="text-xs text-muted-foreground mb-2">Пилюли — выбор метрики, цвет = цвет линии на графике</div>
+                <div id="demoPills" class="flex flex-wrap items-center gap-x-4 gap-y-1.5"></div>
+              </div>
+              <div>
+                <div class="text-xs text-muted-foreground mb-2">Чипы — выбор объекта</div>
+                <div id="demoChips" class="flex flex-wrap items-center gap-2"></div>
+              </div>
+              <div class="flex flex-wrap items-center gap-5">
+                <div>
+                  <div class="text-xs text-muted-foreground mb-2">Сегменты</div>
+                  <div class="seg" data-seg>
+                    <button class="on">Абсолютное</button><button>Относительное</button>
+                  </div>
+                </div>
+                <div>
+                  <div class="text-xs text-muted-foreground mb-2">Выпадающая панель</div>
+                  <button type="button" id="demoMenuBtn"
+                    class="field w-[190px] flex items-center justify-between gap-2 text-left">
+                    <span id="demoMenuLabel" class="truncate">Все — 5</span>
+                    <span class="text-[9px] opacity-60 shrink-0">▼</span>
+                  </button>
+                </div>
+              </div>
+              <div>
+                <div class="text-xs text-muted-foreground mb-2">Плашки, счётчик, флаг</div>
+                <div class="flex flex-wrap items-center gap-3">
+                  <div class="db-tags max-w-[220px]">
+                    <span class="db-tag" title="Скидки к новому сезону">Скидки к новому сезону</span>
+                    <span class="db-tag" title="Мега распродажа">Мега распродажа</span>
+                  </div>
+                  <span class="db-count">12</span>
+                  <span class="db-flag text-emerald-600 dark:text-emerald-400"><i></i>да</span>
+                  <span class="db-flag text-muted-foreground"><i></i>нет</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- прогресс -->
+          <div class="rounded-lg border border-border bg-card p-5">
+            <div class="flex items-start justify-between gap-4">
+              <div class="min-w-0">
+                <div class="font-medium truncate">Шаг 3 из 7 · собираю показатели</div>
+                <div class="text-sm text-muted-foreground truncate mt-0.5">Последнее сообщение операции</div>
+              </div>
+              <button class="shrink-0 rounded-md border border-border bg-background px-3 py-1.5 text-sm
+                             font-medium hover:bg-accent transition-colors">Отменить</button>
+            </div>
+            <div class="mt-3 h-2 w-full rounded-full bg-muted overflow-hidden">
+              <div class="h-full bg-primary transition-all duration-500" style="width:42%"></div>
+            </div>
+            <details class="mt-3">
+              <summary class="cursor-pointer select-none text-sm text-muted-foreground hover:text-foreground">
+                Показать лог</summary>
+              <pre class="mt-2 max-h-64 overflow-auto rounded-md bg-muted p-3 text-xs leading-relaxed
+                          whitespace-pre-wrap">12:04:01  старт
+12:04:03  шаг 1 — готово
+12:04:19  шаг 2 — готово</pre>
+            </details>
+          </div>
+
+          <!-- числа и состояния -->
+          <div class="grid gap-5 sm:grid-cols-2">
+            <div class="rounded-lg border border-border bg-card">
+              <div class="px-5 py-4 border-b border-border">
+                <h2 class="font-semibold">Числа и динамика</h2>
+                <p class="text-sm text-muted-foreground mt-0.5">Направление — стрелкой и цветом, никогда цветом одним</p>
+              </div>
+              <div id="demoNumbers" class="p-5 text-sm space-y-2"></div>
+            </div>
+
+            <div class="rounded-lg border border-border bg-card">
+              <div class="px-5 py-4 border-b border-border">
+                <h2 class="font-semibold">Состояния раздела</h2>
+                <p class="text-sm text-muted-foreground mt-0.5">Пустого экрана не бывает никогда</p>
+              </div>
+              <div class="p-5 space-y-4 text-sm">
+                <div class="rounded-md border border-border p-4 text-muted-foreground text-center">Загружаю данные…</div>
+                <div class="rounded-md border border-border p-4 text-sm text-muted-foreground text-center">
+                  <div class="font-medium text-foreground">Данных пока нет</div>
+                  <p class="mt-1">Соберите их — это займёт несколько минут.</p>
+                  <button class="mt-4 rounded-md bg-primary text-primary-foreground px-4 py-2 text-sm
+                                 font-medium hover:opacity-90 transition-opacity">Перейти к выгрузке</button>
+                </div>
+                <div class="rounded-md border border-border p-4 text-center">
+                  <div class="text-rose-500 font-medium">Ошибка</div>
+                  <div class="mt-1 text-muted-foreground">Текст, который вернул сервер</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- акценты блоков -->
+          <div class="rounded-lg border border-border bg-card overflow-hidden">
+            <div class="px-5 py-4 border-b border-border">
+              <h2 class="font-semibold">Акценты блоков</h2>
+              <p class="text-sm text-muted-foreground mt-0.5">Семь пар «фон + текст» и полоса слева; точка и счётчик берут цвет через currentColor</p>
+            </div>
+            <div id="demoAcc"></div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- -------------------------- ТАБЛИЦА --------------------------- -->
+      <section data-screen="table" class="hidden p-4">
+        <div class="rounded-lg border border-border bg-card overflow-hidden">
+          <div class="px-4 py-2 border-b border-border text-xs text-muted-foreground flex flex-wrap items-center gap-x-4 gap-y-1">
+            <span>Демо-данные · 5 объектов · 3 блока показателей</span>
+            <span>Узкая колонка справа от значения — отклонение от опорной</span>
+          </div>
+          <div class="px-4 py-2.5 border-b border-border flex flex-wrap items-center gap-2">
+            <span class="text-xs text-muted-foreground mr-1">Режим:</span>
+            <div class="seg" data-seg><button class="on">Абсолютное</button><button>Относительное</button></div>
+          </div>
+          <div class="scroll-area overflow-auto" style="max-height:calc(100vh - 200px)">
+            <table id="tbl" class="tbl text-[13px]"></table>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<script>
+// ============================================================
+//  Общие помощники. Переносятся в новый проект как есть.
+// ============================================================
+function el(id) { return document.getElementById(id); }
+
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+  });
+}
+
+var fmtInt  = new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 0 });
+var fmtNum  = new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 1 });
+// Знаки не срезаются даже у круглых чисел: столбик «5,00 %» рядом с «0,37 %»
+// читается лучше, чем «5 %».
+var fmtNum2 = new Intl.NumberFormat('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+function isNum(v) { return typeof v === 'number' && isFinite(v); }
+
+/** Пусто — это «—», а не 0 и не пустая ячейка. Формат — свойство данных. */
+function formatValue(value, format) {
+  if (format === 'bool') return value === null || value === undefined || value === '' ? '—' : (value ? 'да' : 'нет');
+  if (value === null || value === undefined || value === '') return '—';
+  if (format === 'text' || format === 'list') return esc(value);
+  if (typeof value !== 'number' || !isFinite(value)) return '—';
+  switch (format) {
+    case 'money':    return fmtInt.format(Math.round(value)) + ' ₽';
+    case 'percent':  return fmtNum.format(value) + ' %';
+    case 'percent2': return fmtNum2.format(value) + ' %';
+    case 'rating':   return value.toFixed(2).replace('.', ',');
+    case 'int':      return fmtInt.format(Math.round(value));
+    case 'hours':    return fmtInt.format(Math.round(value)) + ' ч';
+    default:         return fmtNum.format(value);
+  }
+}
+
+function shortNumber(v) {
+  var a = Math.abs(v);
+  if (a >= 1e6) return fmtNum.format(v / 1e6) + ' млн';
+  if (a >= 1e3) return fmtNum.format(v / 1e3) + ' тыс';
+  return fmtNum.format(v);
+}
+
+function plural(n, one, few, many) {
+  var m10 = n % 10, m100 = n % 100;
+  if (m10 === 1 && m100 !== 11) return one;
+  if (m10 >= 2 && m10 <= 4 && (m100 < 10 || m100 >= 20)) return few;
+  return many;
+}
+
+// Приглушённые: таких значений в таблице сотни, полная насыщенность
+// превращает экран в гирлянду.
+var GOOD_CLASS = 'text-emerald-700/85 dark:text-emerald-400/80';
+var BAD_CLASS  = 'text-rose-700/85 dark:text-rose-400/80';
+
+/** Отклонение: стрелка + значение + цвет. betterLower — «меньше = лучше». */
+function delta(current, base, format, betterLower) {
+  if (!isNum(current) || !isNum(base)) return '<span class="text-muted-foreground/70">—</span>';
+  var diff = current - base;
+  if (diff === 0) return '<span class="text-muted-foreground/70">0</span>';
+  var good = betterLower ? diff < 0 : diff > 0;
+  return '<span class="' + (good ? GOOD_CLASS : BAD_CLASS) + '">' +
+         (diff > 0 ? '↑ ' : '↓ ') + formatValue(Math.abs(diff), format) + '</span>';
+}
+
+/** Тепловая заливка. Потолок 0.14: заливка намекает, а не кричит. */
+function heatStyle(value, min, max, invert) {
+  if (!isNum(value) || max === min) return '';
+  var t = (value - min) / (max - min);
+  if (invert) t = 1 - t;
+  var alpha = (Math.abs(t - 0.5) * 2 * 0.14).toFixed(3);
+  return 'background-color:rgba(' + (t >= 0.5 ? '16,185,129' : '244,63,94') + ',' + alpha + ')';
+}
+
+/**
+ * Спарклайн. preserveAspectRatio="none" растягивает координаты, а
+ * vector-effect="non-scaling-stroke" не даёт растянуться толщине линии.
+ */
+function sparkline(series, color, width) {
+  var nums = series.map(function (v) { return isNum(v) ? v : 0; });
+  if (!nums.length) return '';
+  var max = Math.max.apply(null, nums), min = Math.min.apply(null, nums.concat([0]));
+  if (max === min) max = min + 1;
+  var W = width || 56, H = 20, step = W / nums.length;
+  var pts = nums.map(function (v, i) {
+    return (i * step + step / 2).toFixed(1) + ',' + (H - 2 - (H - 4) * (v - min) / (max - min)).toFixed(1);
+  });
+  return '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" ' +
+         'style="width:' + W + 'px;height:20px;display:block;margin:0 auto">' +
+         '<polyline points="' + pts.join(' ') + '" fill="none" stroke="' + (color || '#a855f7') +
+         '" stroke-width="1.3" stroke-linejoin="round" vector-effect="non-scaling-stroke"/></svg>';
+}
+
+/**
+ * Ширина колонки по настоящей ширине текста, а не по числу символов: пробелы,
+ * неразрывные пробелы и знак валюты шире или уже цифры, и ошибка повторяется
+ * столько раз, сколько колонок.
+ */
+var measureNode = null;
+function textWidth(text, fontSize) {
+  if (!measureNode) {
+    measureNode = document.createElement('span');
+    measureNode.style.cssText = 'position:absolute;left:-9999px;top:0;visibility:hidden;' +
+      'white-space:pre;font-variant-numeric:tabular-nums';
+    document.body.appendChild(measureNode);
+  }
+  measureNode.style.fontSize = fontSize || '.75rem';
+  measureNode.textContent = text;
+  return measureNode.getBoundingClientRect().width;
+}
+function columnWidth(texts, min, max) {
+  var widest = 0;
+  texts.forEach(function (t) { if (t) widest = Math.max(widest, textWidth(t)); });
+  return Math.max(min || 62, Math.min(max || 180, Math.ceil(widest) + 11));
+}
+
+// Цвет выдаётся по индексу сущности в списке, а не по порядку отрисовки: тогда
+// у метрики один и тот же цвет в легенде, на графике и в строке таблицы.
+var SERIES_COLORS = ['#a855f7','#f59e0b','#10b981','#3b82f6','#ec4899','#14b8a6','#ef4444',
+                     '#8b5cf6','#84cc16','#f97316','#06b6d4','#d946ef','#eab308','#0ea5e9','#94a3b8'];
+
+// ============================================================
+//  Каркас: тема, сайдбар, переключение разделов
+// ============================================================
+var SCREENS = [
+  { id: 'components', label: 'Компоненты', subtitle: 'Карточки, кнопки, поля, переключатели, состояния',
+    icon: '<rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/>' +
+          '<rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/>' },
+  { id: 'table', label: 'Таблица', subtitle: 'Залипающие колонки, шапка, зебра, тепловая заливка',
+    icon: '<rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18M3 15h18M9 3v18"/>' }
+];
+var SETTINGS_SCREEN = { id: 'settings', label: 'Настройки', subtitle: 'Пример нижнего пункта меню',
+  icon: '<path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/>' };
+
+function navButton(s) {
+  return '<button class="nav-item w-full flex items-center gap-3 rounded-md px-3 py-2 text-sm ' +
+         'text-sidebar-foreground hover:bg-accent hover:text-foreground transition-colors" data-go="' + s.id + '">' +
+           '<svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+           'stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + s.icon + '</svg>' +
+           '<span>' + s.label + '</span></button>';
+}
+
+function buildNav() {
+  el('nav').innerHTML = SCREENS.map(navButton).join('');
+  el('navBottom').innerHTML = navButton(SETTINGS_SCREEN);
+  document.querySelectorAll('[data-go]').forEach(function (b) {
+    b.onclick = function () { go(b.getAttribute('data-go')); };
+  });
+}
+
+function go(id) {
+  var screen = SCREENS.concat([SETTINGS_SCREEN]).filter(function (s) { return s.id === id; })[0];
+  if (!screen) return;
+  document.querySelectorAll('[data-screen]').forEach(function (s) {
+    s.classList.toggle('hidden', s.getAttribute('data-screen') !== id);
+  });
+  document.querySelectorAll('[data-go]').forEach(function (b) {
+    b.classList.toggle('active', b.getAttribute('data-go') === id);
+  });
+  el('pageTitle').textContent = screen.label;
+  el('pageSubtitle').textContent = screen.subtitle;
+  closeSidebar();
+}
+
+function openSidebar() { el('sidebar').classList.remove('-translate-x-full'); el('overlay').classList.remove('hidden'); }
+function closeSidebar() {
+  if (window.innerWidth < 1024) { el('sidebar').classList.add('-translate-x-full'); el('overlay').classList.add('hidden'); }
+}
+el('burger').onclick = openSidebar;
+el('overlay').onclick = closeSidebar;
+
+// Светлая по умолчанию, выбор запоминается. try/catch не для красоты: в iframe
+// с закрытыми куками localStorage бросает исключение и роняет всю страницу.
+(function () {
+  try { if (localStorage.getItem('theme') === 'dark') document.documentElement.classList.add('dark'); } catch (e) {}
+})();
+el('theme').onclick = function () {
+  var dark = document.documentElement.classList.toggle('dark');
+  try { localStorage.setItem('theme', dark ? 'dark' : 'light'); } catch (e) {}
+};
+
+// ============================================================
+//  Демо-данные. Выдуманные и ровно для того, чтобы было что показать.
+// ============================================================
+var METRICS = [
+  { id: 'views',   label: 'Показы',           format: 'int' },
+  { id: 'clicks',  label: 'Переходы',         format: 'int' },
+  { id: 'ctr',     label: 'CTR',              format: 'percent2' },
+  { id: 'cart',    label: 'В корзину',        format: 'int' },
+  { id: 'orders',  label: 'Заказы',           format: 'int' },
+  { id: 'sum',     label: 'Сумма заказов',    format: 'money' },
+  { id: 'avg',     label: 'Средний чек',      format: 'money' },
+  { id: 'buyout',  label: 'Процент выкупа',   format: 'percent' },
+  { id: 'rating',  label: 'Рейтинг',          format: 'rating' },
+  { id: 'pos',     label: 'Средняя позиция',  format: 'num', betterLower: true },
+  { id: 'stock',   label: 'Остаток',          format: 'int' },
+  { id: 'days',    label: 'Хватит на',        format: 'int' }
+];
+
+var BLOCKS = [
+  { title: 'Трафик',  acc: 'acc-sky',     bar: 'bar-sky',     ids: ['views', 'clicks', 'ctr'] },
+  { title: 'Продажи', acc: 'acc-emerald', bar: 'bar-emerald', ids: ['cart', 'orders', 'sum', 'avg', 'buyout'] },
+  { title: 'Прочее',  acc: 'acc-violet',  bar: 'bar-violet',  ids: ['rating', 'pos', 'stock', 'days'] }
+];
+
+var PRODUCTS = [
+  { id: '204561', name: 'Опорный объект', lead: true },
+  { id: '198734', name: 'Объект Б' },
+  { id: '215009', name: 'Объект В' },
+  { id: '177412', name: 'Объект Г' },
+  { id: '233870', name: 'Объект Д' }
+];
+
+/* Псевдослучайные, но одинаковые при каждом открытии: шаблон не должен
+   выглядеть по-разному на двух скриншотах. */
+var seed = 20260812;
+function rnd() { seed = (seed * 1103515245 + 12345) % 2147483648; return seed / 2147483648; }
+
+var BASE = { views: 82000, clicks: 5400, ctr: 6.4, cart: 1450, orders: 690, sum: 1480000,
+             avg: 2150, buyout: 74, rating: 4.7, pos: 12, stock: 940, days: 21 };
+
+var DATA = {};
+METRICS.forEach(function (m) {
+  DATA[m.id] = {};
+  PRODUCTS.forEach(function (p) {
+    var k = 0.55 + rnd() * 0.9;
+    DATA[m.id][p.id] = { value: BASE[m.id] * k, series: [] };
+    var v = BASE[m.id] * k;
+    for (var i = 0; i < 14; i++) { v = v * (0.88 + rnd() * 0.26); DATA[m.id][p.id].series.push(v); }
+  });
+});
+
+// ============================================================
+//  Таблица
+// ============================================================
+var W_LABEL = 210, W_BEST = 88, W_AVG = 88, W_TREND = 70;
+var W_LEFT = W_LABEL + W_BEST + W_AVG + W_TREND;   // 456 — совпадает с .t-c* в <style>
+var W_VALUE = 116, W_GAP = 72;
+var W_PROD = W_VALUE + W_GAP;
+var LEAD_CLS = 'db-lead db-lead-l db-lead-r';
+
+/*
+ * Смещение залипающей ячейки опорной колонки. У каждой подколонки оно своё:
+ * значение встаёт сразу за замороженной зоной, отклонение — за значением.
+ * Одинаковое left у обеих подколонок — самая частая ошибка в такой таблице:
+ * при прокрутке они наезжают друг на друга.
+ */
+function leadStyle(offset) { return ' style="left:' + (W_LEFT + (offset || 0)) + 'px"'; }
+
+function buildTable() {
+  var lead = PRODUCTS.filter(function (p) { return p.lead; })[0];
+  var cols = 4 + PRODUCTS.length * 2;
+
+  var html = '<colgroup>' +
+    [W_LABEL, W_BEST, W_AVG, W_TREND].map(function (w) { return '<col style="width:' + w + 'px">'; }).join('') +
+    PRODUCTS.map(function () {
+      return '<col style="width:' + W_VALUE + 'px"><col style="width:' + W_GAP + 'px">';
+    }).join('') + '</colgroup>';
+
+  // ---------- шапка ----------
+  html += '<thead><tr class="sticky-head">' +
+    '<th class="t-c1 db-cell head-cell text-left font-medium text-muted-foreground">Показатель</th>' +
+    '<th class="t-c2 db-cell head-cell text-center font-medium text-muted-foreground">🏆 Лучший</th>' +
+    '<th class="t-c3 db-cell head-cell text-center font-medium text-muted-foreground">Средний</th>' +
+    '<th class="t-c4 db-cell head-cell text-center font-medium text-muted-foreground text-[11px]">Тренд</th>';
+
+  PRODUCTS.forEach(function (p) {
+    var isLead = !!p.lead;
+    html += '<th colspan="2" class="db-cell head-cell text-center db-sep ' +
+      (isLead ? 'stick ' + LEAD_CLS : '') + '"' + (isLead ? leadStyle() : '') + '>' +
+      '<div class="font-semibold">' + esc(p.id) + '</div>' +
+      '<div class="text-[11px] font-normal text-muted-foreground mt-0.5">' + esc(p.name) + '</div>' +
+      (isLead ? '<div class="mt-1"><span class="db-lead-tag">ОПОРНЫЙ</span></div>' : '') + '</th>';
+  });
+  html += '</tr></thead>';
+
+  // ---------- тело ----------
+  var body = '';
+  BLOCKS.forEach(function (block, bi) {
+    if (bi) body += '<tr><td colspan="' + cols + '" class="p-0" ' +
+                    'style="height:10px;background:hsl(var(--background));border:0"></td></tr>';
+
+    body += '<tr><td colspan="' + cols + '" class="' + block.acc + ' ' + block.bar + ' px-3 py-2">' +
+      '<span class="row-pin inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wide">' +
+        '<span class="db-dot"></span>' + esc(block.title) +
+        '<span class="db-count">' + block.ids.length + '</span></span></td></tr>';
+
+    block.ids.forEach(function (id, ri) {
+      var m = METRICS.filter(function (x) { return x.id === id; })[0];
+      var values = PRODUCTS.map(function (p) { return DATA[id][p.id].value; });
+      var min = Math.min.apply(null, values), max = Math.max.apply(null, values);
+      var best = m.betterLower ? min : max;
+      var avg = values.reduce(function (a, b) { return a + b; }, 0) / values.length;
+      var baseValue = DATA[id][lead.id].value;
+      var color = SERIES_COLORS[METRICS.indexOf(m) % SERIES_COLORS.length];
+
+      body += '<tr class="' + (ri % 2 ? 'db-odd ' : '') + 'hover:bg-accent/30 transition-colors">' +
+        '<td class="t-c1 db-cell bg-card">' +
+          '<span class="inline-flex items-center gap-2">' +
+          '<span class="pill-dot" style="background:' + color + '"></span>' + esc(m.label) + '</span></td>' +
+        '<td class="t-c2 db-cell bg-card text-right tabular-nums font-medium">' +
+          formatValue(best, m.format) + '</td>' +
+        '<td class="t-c3 db-cell bg-card text-right tabular-nums text-muted-foreground">' +
+          formatValue(avg, m.format) + '</td>' +
+        '<td class="t-c4 bg-card px-1 py-1">' +
+          sparkline(DATA[id][lead.id].series, color) + '</td>';
+
+      PRODUCTS.forEach(function (p) {
+        var v = DATA[id][p.id].value;
+        var isLead = !!p.lead;
+        // Края опорной колонки рисуются один раз на всю колонку: левый — у
+        // первой подколонки, правый — у последней. Иначе внутри неё появится
+        // лишняя вертикаль.
+        body += '<td class="db-cell text-right tabular-nums db-sep ' +
+          (isLead ? 'stick db-lead db-lead-l' : '') + '"' +
+          (isLead ? leadStyle(0) : ' style="' + heatStyle(v, min, max, !!m.betterLower) + '"') + '>' +
+          formatValue(v, m.format) + '</td>' +
+          '<td class="db-cell text-center tabular-nums text-xs ' +
+          (isLead ? 'stick db-lead db-lead-r' : '') + '"' +
+          (isLead ? leadStyle(W_VALUE) : '') + '>' +
+          (isLead ? '<span class="text-muted-foreground/70">—</span>'
+                  : delta(v, baseValue, m.format, !!m.betterLower)) + '</td>';
+      });
+      body += '</tr>';
+    });
+  });
+
+  html += '<tbody>' + body + '</tbody>';
+
+  var table = el('tbl');
+  table.style.width = (W_LEFT + PRODUCTS.length * W_PROD) + 'px';
+  table.innerHTML = html;
+}
+
+// ============================================================
+//  Витрина компонентов
+// ============================================================
+function buildPills() {
+  el('demoPills').innerHTML = METRICS.slice(0, 6).map(function (m, i) {
+    return '<span class="pill ' + (i < 3 ? '' : 'off') + '" data-pill>' +
+      '<span class="pill-dot" style="background:' + SERIES_COLORS[i] + '"></span>' +
+      '<span>' + esc(m.label) + '</span></span>';
+  }).join('');
+  el('demoPills').querySelectorAll('[data-pill]').forEach(function (n) {
+    n.onclick = function () { n.classList.toggle('off'); };
+  });
+
+  el('demoChips').innerHTML = PRODUCTS.map(function (p, i) {
+    return '<span class="chip ' + (i < 3 ? 'on' : 'off') + '" data-chip>' +
+      '<span class="pill-dot ml-1" style="background:' + SERIES_COLORS[i] + '"></span>' +
+      esc(p.id) + '</span>';
+  }).join('');
+  el('demoChips').querySelectorAll('[data-chip]').forEach(function (n) {
+    n.onclick = function () { n.classList.toggle('on'); n.classList.toggle('off'); };
+  });
+
+  document.querySelectorAll('[data-seg]').forEach(function (group) {
+    group.querySelectorAll('button').forEach(function (b) {
+      b.onclick = function () {
+        group.querySelectorAll('button').forEach(function (x) { x.classList.remove('on'); });
+        b.classList.add('on');
+      };
+    });
+  });
+}
+
+function buildNumbers() {
+  var rows = [
+    ['Целое',        formatValue(1500239, 'int')],
+    ['Деньги',       formatValue(1500239, 'money')],
+    ['Процент',      formatValue(6.4, 'percent')],
+    ['Процент, 2 зн', formatValue(0.37, 'percent2')],
+    ['Рейтинг',      formatValue(4.7, 'rating')],
+    ['Пусто',        formatValue(null, 'int')]
+  ];
+  var html = rows.map(function (r) {
+    return '<div class="flex items-center justify-between gap-3">' +
+      '<span class="text-muted-foreground">' + r[0] + '</span>' +
+      '<span class="tabular-nums font-medium">' + r[1] + '</span></div>';
+  }).join('');
+
+  html += '<div class="pt-2 mt-2 border-t border-border space-y-2">' +
+    '<div class="flex items-center justify-between gap-3"><span class="text-muted-foreground">Рост</span>' +
+      delta(1200, 1000, 'int', false) + '</div>' +
+    '<div class="flex items-center justify-between gap-3"><span class="text-muted-foreground">Падение</span>' +
+      delta(800, 1000, 'int', false) + '</div>' +
+    '<div class="flex items-center justify-between gap-3">' +
+      '<span class="text-muted-foreground">Падение, но «меньше = лучше»</span>' +
+      delta(8, 12, 'num', true) + '</div>' +
+    '<div class="flex items-center justify-between gap-3"><span class="text-muted-foreground">Спарклайн</span>' +
+      sparkline(DATA.orders[PRODUCTS[0].id].series, SERIES_COLORS[2], 90) + '</div></div>';
+
+  el('demoNumbers').innerHTML = html;
+}
+
+function buildAccents() {
+  var list = [['sky', 'Трафик'], ['amber', 'Цены'], ['emerald', 'Продажи'], ['violet', 'Склад'],
+              ['indigo', 'Реклама'], ['rose', 'Возвраты'], ['teal', 'Отзывы']];
+  el('demoAcc').innerHTML = list.map(function (a) {
+    return '<div class="acc-' + a[0] + ' bar-' + a[0] + ' px-5 py-2.5 text-xs font-semibold ' +
+      'uppercase tracking-wide flex items-center gap-2">' +
+      '<span class="db-dot"></span>' + a[1] + '<span class="db-count">4</span></div>';
+  }).join('');
+}
+
+/**
+ * Выпадающая панель. Живёт в <body> и позиционируется fixed: у контейнера с
+ * кнопкой часто overflow: auto, и панель внутри была бы обрезана. Обработчики
+ * закрытия вешаются на документ по одному разу, а не при каждом открытии.
+ */
+var menuNode = null;
+function demoMenu() {
+  if (menuNode) return menuNode;
+  menuNode = document.createElement('div');
+  menuNode.className = 'menu hidden';
+  document.body.appendChild(menuNode);
+
+  document.addEventListener('mousedown', function (e) {
+    if (menuNode.classList.contains('hidden')) return;
+    if (menuNode.contains(e.target) || el('demoMenuBtn').contains(e.target)) return;
+    menuNode.classList.add('hidden');
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') menuNode.classList.add('hidden');
+  });
+  window.addEventListener('resize', function () {
+    if (!menuNode.classList.contains('hidden')) openDemoMenu();
+  });
+  return menuNode;
+}
+
+function openDemoMenu() {
+  var button = el('demoMenuBtn'), menu = demoMenu();
+
+  menu.innerHTML =
+    '<div class="px-3 py-2 border-b border-border flex gap-4 text-xs">' +
+      '<button type="button" class="text-sky-600 dark:text-sky-400 hover:underline">Показать все</button>' +
+      '<button type="button" class="text-muted-foreground hover:underline">Снять все</button></div>' +
+    '<div class="py-1 overflow-auto scroll-area" style="max-height:min(52vh,340px)">' +
+      METRICS.slice(0, 5).map(function (m, i) {
+        return '<label class="flex items-center gap-2 px-3 py-1.5 text-[13px] cursor-pointer">' +
+          '<input type="checkbox" checked>' +
+          '<span class="pill-dot" style="background:' + SERIES_COLORS[i] + '"></span>' +
+          '<span class="truncate">' + esc(m.label) + '</span></label>';
+      }).join('') + '</div>';
+
+  var rect = button.getBoundingClientRect();
+  var width = Math.max(rect.width, 280);
+  menu.classList.remove('hidden');
+  menu.style.width = width + 'px';
+  menu.style.left = Math.max(8, Math.min(rect.left, window.innerWidth - width - 8)) + 'px';
+
+  // у нижнего края экрана панель раскрывается вверх
+  var below = window.innerHeight - rect.bottom;
+  if (below >= menu.offsetHeight + 8 || below >= rect.top) {
+    menu.style.top = (rect.bottom + 4) + 'px'; menu.style.bottom = 'auto';
+  } else {
+    menu.style.top = 'auto'; menu.style.bottom = (window.innerHeight - rect.top + 4) + 'px';
+  }
+}
+
+el('demoMenuBtn').onclick = function (e) {
+  e.stopPropagation();
+  var menu = demoMenu();
+  if (menu.classList.contains('hidden')) openDemoMenu(); else menu.classList.add('hidden');
+};
+
+// ============================================================
+//  Старт
+// ============================================================
+buildNav();
+buildPills();
+buildNumbers();
+buildAccents();
+buildTable();
+go('components');
+</script>
+</body>
+</html>
